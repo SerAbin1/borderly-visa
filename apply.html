@@ -166,7 +166,9 @@
               />
             </div>
             <div class="form-group">
-              <label for="email" class="block text-sm font-medium text-slate-700"
+              <label
+                for="email"
+                class="block text-sm font-medium text-slate-700"
                 >Email</label
               >
               <input
@@ -299,19 +301,14 @@
             Please complete the payment to finalize your application.
           </p>
           <div class="mt-6 flex justify-center">
-            <a
-              href="upi://pay?pa=simonbijuthumbeparambil-2@okhdfcbank&pn=borderlyvisa&am=5500&cu=INR"
-              class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-6 py-3 rounded-lg transition-colors"
-            >
-              Pay Now
-            </a>
+            <form>
+              <script
+                src="https://checkout.razorpay.com/v1/payment-button.js"
+                data-payment_button_id="pl_RMiQz2kIFVUx8c"
+                async
+              ></script>
+            </form>
           </div>
-          <button
-            id="payment-continue-btn"
-            class="mt-4 w-full bg-slate-900 text-white font-semibold px-5 py-3 rounded-lg hover:bg-slate-700 transition-colors"
-          >
-            Continue
-          </button>
         </section>
       </section>
     </main>
@@ -365,7 +362,10 @@
             <h2 id="modal-title" class="text-2xl font-bold text-slate-900">
               Log In
             </h2>
-            <button id="close-modal-button" class="text-slate-500 hover:text-slate-800">
+            <button
+              id="close-modal-button"
+              class="text-slate-500 hover:text-slate-800"
+            >
               <svg
                 class="h-6 w-6"
                 fill="none"
@@ -384,7 +384,9 @@
           </div>
           <form id="auth-form" class="space-y-4">
             <div>
-              <label for="email" class="block text-sm font-medium text-slate-700"
+              <label
+                for="email"
+                class="block text-sm font-medium text-slate-700"
                 >Email Address</label
               >
               <input
@@ -456,35 +458,41 @@
     </div>
 
     <script type="module">
-      import supabase from "./src/supabase-client.js"
-      import { redirectTo, showAuthModal } from "./src/ui.js"
+      import supabase from "./src/supabase-client.js";
+      import { redirectTo, showAuthModal } from "./src/ui.js";
 
       const visaApplicationForm = document.getElementById(
         "visa-application-form",
-      )
-      const initialFormSection = document.getElementById("initial-form-section")
+      );
+      const initialFormSection = document.getElementById(
+        "initial-form-section",
+      );
       const documentUploadSection = document.getElementById(
         "document-upload-section",
-      )
-      const paymentSection = document.getElementById("payment-section")
-      const submitDocumentsBtn = document.getElementById("submit-documents-btn")
-      const paymentContinueBtn = document.getElementById("payment-continue-btn")
-      const passportFile = document.getElementById("passport-file")
-      const aadharFile = document.getElementById("aadhar-file")
-      let applicationId
+      );
+      const paymentSection = document.getElementById("payment-section");
+      const submitDocumentsBtn = document.getElementById(
+        "submit-documents-btn",
+      );
+      const paymentContinueBtn = document.getElementById(
+        "payment-continue-btn",
+      );
+      const passportFile = document.getElementById("passport-file");
+      const aadharFile = document.getElementById("aadhar-file");
+      let applicationId;
 
       visaApplicationForm.addEventListener("submit", async function (event) {
-        event.preventDefault()
+        event.preventDefault();
 
         const {
           data: { user },
-        } = await supabase.auth.getUser()
+        } = await supabase.auth.getUser();
         if (!user) {
-          showAuthModal()
-          return
+          showAuthModal();
+          return;
         }
 
-        const formData = new FormData(visaApplicationForm)
+        const formData = new FormData(visaApplicationForm);
         const applicationData = {
           user_id: user.id,
           full_name: formData.get("full-name"),
@@ -494,54 +502,54 @@
           purpose: formData.get("purpose-of-visit"),
           travel_dates: formData.get("travel-dates"),
           status: "Submitted",
-        }
+        };
 
         const { data, error } = await supabase
           .from("applications")
           .insert([applicationData])
-          .select()
+          .select();
 
         if (error) {
-          alert("Error submitting application: " + error.message)
-          return
+          alert("Error submitting application: " + error.message);
+          return;
         }
 
-        applicationId = data[0].id
-        initialFormSection.style.display = "none"
-        documentUploadSection.style.display = "block"
-      })
+        applicationId = data[0].id;
+        initialFormSection.style.display = "none";
+        documentUploadSection.style.display = "block";
+      });
 
       submitDocumentsBtn.addEventListener("click", async function () {
-        const passport = passportFile.files[0]
-        const aadhar = aadharFile.files[0]
+        const passport = passportFile.files[0];
+        const aadhar = aadharFile.files[0];
 
         if (!passport || !aadhar) {
-          alert("Please select both passport and Aadhar card files.")
-          return
+          alert("Please select both passport and Aadhar card files.");
+          return;
         }
 
         try {
           const { data: passportUploadData, error: passportError } =
             await supabase.storage
               .from("visa-documents")
-              .upload(`${applicationId}/passport.pdf`, passport)
+              .upload(`${applicationId}/passport.pdf`, passport);
 
           if (passportError) {
-            throw passportError
+            throw passportError;
           }
 
           const { data: aadharUploadData, error: aadharError } =
             await supabase.storage
               .from("visa-documents")
-              .upload(`${applicationId}/aadhar.pdf`, aadhar)
+              .upload(`${applicationId}/aadhar.pdf`, aadhar);
 
           if (aadharError) {
-            throw aadharError
+            throw aadharError;
           }
 
           const {
             data: { user },
-          } = await supabase.auth.getUser()
+          } = await supabase.auth.getUser();
 
           const applicationFiles = [
             {
@@ -554,27 +562,27 @@
               application_id: applicationId,
               user_id: user.id,
             },
-          ]
+          ];
 
           const { error: insertError } = await supabase
             .from("application_files")
-            .insert(applicationFiles)
+            .insert(applicationFiles);
 
           if (insertError) {
-            throw insertError
+            throw insertError;
           }
 
-          documentUploadSection.style.display = "none"
-          paymentSection.style.display = "block"
+          documentUploadSection.style.display = "none";
+          paymentSection.style.display = "block";
         } catch (error) {
-          alert("Error submitting documents: " + error.message)
-          console.error("Error submitting documents:", error)
+          alert("Error submitting documents: " + error.message);
+          console.error("Error submitting documents:", error);
         }
-      })
+      });
 
       paymentContinueBtn.addEventListener("click", function () {
-        redirectTo("/status.html")
-      })
+        redirectTo("/status.html");
+      });
     </script>
   </body>
 </html>
